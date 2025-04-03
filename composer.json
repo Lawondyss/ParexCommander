@@ -1,8 +1,8 @@
 {
   "name": "lawondyss/parex-commander",
-  "description": "Build interactive CLI applications in PHP with rich terminal features",
+  "description": "Lightweight PHP tool for creating interactive terminal applications",
   "type": "library",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "keywords": [
     "php",
     "cli",
