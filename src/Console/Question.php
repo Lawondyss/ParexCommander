@@ -8,7 +8,7 @@ use function trim;
 
 use const STDIN;
 
-class Text
+class Question
 {
   public function make(
     string $prompt,

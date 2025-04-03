@@ -20,7 +20,7 @@ use function system;
 
 use const STDIN;
 
-class Select
+class Selection
 {
   private const ReadTimeout = 200_000; // microseconds
 
