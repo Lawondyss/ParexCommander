@@ -10,6 +10,12 @@ use const STDIN;
 
 class Question
 {
+  public function __construct(
+    private readonly Writer $writer,
+  ) {
+  }
+
+
   public function make(
     string $prompt,
     string $default = '',
@@ -18,7 +24,7 @@ class Question
     while (true) {
       $displayPrompt = $prompt;
       $default && $displayPrompt .= " [{$default}]";
-      echo $displayPrompt, ' ';
+      $this->writer->write($displayPrompt, $default ? " [{$default}]" : '', ' ');
 
       $text = trim(fgets(STDIN));
       $text = $text !== '' ? $text : $default;
@@ -27,8 +33,7 @@ class Question
         $result = $validator($text);
 
         if ($result !== true) {
-          $error = is_string($result) ? $result : 'Invalid value';
-          echo $error, PHP_EOL;
+          $this->writer->writeLn(is_string($result) ? $result : 'Invalid value');
           continue;
         }
       }

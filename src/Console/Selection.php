@@ -8,6 +8,7 @@ use Lawondyss\ParexCommander\Console\Utils\Key;
 use function array_diff;
 use function array_flip;
 use function array_intersect_key;
+use function array_is_list;
 use function array_keys;
 use function array_shift;
 use function count;
@@ -27,8 +28,9 @@ class Selection
   private bool $terminalStateAltered = false;
 
 
-  public function __construct()
-  {
+  public function __construct(
+    private readonly Writer $writer,
+  ) {
     // Handler for clean shutdown in case of exceptions or interruptions
     register_shutdown_function($this->restoreTerminalState(...));
   }
@@ -41,10 +43,10 @@ class Selection
 
 
   /**
-   * @param array<array-key, string> $options
-   * @return array<string|int>|string|int|null
+   * @param list<string>|array<string, string> $options
+   * @return string[]|string|null List returns value(s), map returns key(s), for nothing returns NULL or empty array
    */
-  public function make(string $prompt, array $options, bool $multiple = false): array|string|int|null
+  public function make(string $prompt, array $options, bool $multiple = false): array|string|null
   {
     if ($options === []) {
       return $multiple ? [] : null;
@@ -73,7 +75,7 @@ class Selection
       $output = $this->render($prompt, $options, $selectedIndex, $selectedOptions, $multiple);
       $linesCount = substr_count($output, PHP_EOL);
 
-      echo $output;
+      $this->writer->write($output);
 
       $input = $this->readKeypress();
       $done = $this->processInput(
@@ -87,8 +89,12 @@ class Selection
 
     $this->restoreTerminalState();
 
-    return $this->formatResult($options, $selectedOptions, $multiple);
+    $result = $this->formatResult($options, $selectedOptions, $multiple);
 
+    $this->moveCursorUp(1);
+    $this->clearDown();
+
+    return $result;
   }
 
 
@@ -121,14 +127,14 @@ class Selection
   private function moveCursorUp(int $lines): void
   {
     if ($lines > 0) {
-      echo Ansi::cursorUpAndStart($lines);
+      $this->writer->write(Ansi::cursorUpAndStart($lines));
     }
   }
 
 
   private function clearDown(): void
   {
-    echo Ansi::ClearDown;
+    $this->writer->write(Ansi::ClearDown);
   }
 
 
@@ -162,7 +168,6 @@ class Selection
       $output .= $prefix . $checkbox . $option . PHP_EOL;
     }
 
-    $output .= PHP_EOL;
     $output .= $multiple
       ? 'Use the up/down arrow keys to navigate, space to select, and Enter to confirm.' . PHP_EOL
       : 'Use the up/down arrow keys to navigate and Enter to select.' . PHP_EOL;
@@ -243,13 +248,13 @@ class Selection
 
 
   /**
-   * @param array<array-key, string> $options
+   * @param list<string>|array<string, string> $options
    * @param array<array-key> $selectedOptions
-   * @return array<array-key>|array-key|null
+   * @return string[]|string|null List returns value(s), map returns key(s)
    */
-  private function formatResult(array $options, array $selectedOptions, bool $multiple): array|string|int|null
+  private function formatResult(array $options, array $selectedOptions, bool $multiple): array|string|null
   {
-    $keys = array_keys($options);
+    $keys = array_is_list($options) ? $options : array_keys($options);
     $result = [];
 
     foreach ($selectedOptions as $index) {

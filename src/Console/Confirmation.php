@@ -10,8 +10,13 @@ use const STDIN;
 
 class Confirmation
 {
-  private const DefaultYesOptions = ['y', 'yes'];
-  private const DefaultNoOptions = ['n', 'no'];
+  public const DefaultYesOptions = ['y', 'yes'];
+  public const DefaultNoOptions = ['n', 'no'];
+
+  public function __construct(
+    private readonly Writer $writer,
+  ) {
+  }
 
 
   /**
@@ -40,7 +45,7 @@ class Confirmation
     $options = "[$yesDisplay/$noDisplay]";
 
     while (true) {
-      echo "{$prompt} {$options} ";
+      $this->writer->write("{$prompt} {$options} ");
       $answer = trim(fgets(STDIN));
 
       if ($answer === '') {
@@ -56,7 +61,7 @@ class Confirmation
       }
 
       // Showing a hint for an incorrect answer
-      echo 'Please enter one of the options: ', implode(', ', [...$yesOptions, ...$noOptions]), PHP_EOL;
+      $this->writer->writeLn('Please enter one of the options: ', implode(', ', [...$yesOptions, ...$noOptions]));
     }
   }
 }
