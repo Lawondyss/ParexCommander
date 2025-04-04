@@ -10,6 +10,7 @@ use Lawondyss\ParexCommander\Console\Writer;
 use Stringable;
 
 use function explode;
+use function max;
 use function str_pad;
 use function str_repeat;
 use function strlen;
@@ -90,5 +91,17 @@ class IO
   public function clearScreen(): void
   {
     $this->writer->write(Ansi::ClearScreen, Ansi::CursorHome);
+  }
+
+
+  public function exitSuccess(): never
+  {
+    exit(0);
+  }
+
+
+  public function exitError(int $code = 1): never
+  {
+    exit(max(1, $code));
   }
 }
