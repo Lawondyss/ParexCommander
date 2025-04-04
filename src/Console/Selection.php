@@ -4,6 +4,7 @@ namespace Lawondyss\ParexCommander\Console;
 
 use Lawondyss\ParexCommander\Console\Utils\Ansi;
 use Lawondyss\ParexCommander\Console\Utils\Key;
+use Lawondyss\ParexCommander\Exception\InvalidArgumentException;
 
 use function array_diff;
 use function array_flip;
@@ -44,23 +45,25 @@ class Selection
 
   /**
    * @param list<string>|array<string, string> $options
-   * @return string[]|string|null List returns value(s), map returns key(s), for nothing returns NULL or empty array
+   * @return string[]|string List returns value(s), map returns key(s)
    */
-  public function make(string $prompt, array $options, bool $multiple = false): array|string|null
+  public function make(string $prompt, array $options, bool $multiple = false, bool $require = true): array|string
   {
-    if ($options === []) {
-      return $multiple ? [] : null;
-    }
+    $options === [] && throw new InvalidArgumentException('Options for selection cannot be empty.');
 
-    $selectedIndex = 0;
+    $position = 0;
     $optionsCount = count($options);
-    $selectedOptions = [];
+    $selectedPositions = [];
     $linesCount = 0;
-
-    $this->setupTerminalState();
+    $error = null;
 
     // Infinite loop until the user confirms the selection
     $firstRun = true;
+
+    // Label for goto
+    startLoop:
+
+    $this->setupTerminalState();
 
     do {
       if (!$firstRun) {
@@ -71,8 +74,8 @@ class Selection
 
       $firstRun = false;
 
-      // Display the menu and calculate the number of lines
-      $output = $this->render($prompt, $options, $selectedIndex, $selectedOptions, $multiple);
+      // Display the menu and calculate the number of lines for redrawing
+      $output = $this->createOutput($prompt, $options, $position, $selectedPositions, $multiple, $error);
       $linesCount = substr_count($output, PHP_EOL);
 
       $this->writer->write($output);
@@ -80,8 +83,9 @@ class Selection
       $input = $this->readKeypress();
       $done = $this->processInput(
         $input,
-        $selectedIndex,
-        $selectedOptions,
+        $error,
+        $position,
+        $selectedPositions,
         $optionsCount,
         $multiple
       );
@@ -89,9 +93,16 @@ class Selection
 
     $this->restoreTerminalState();
 
-    $result = $this->formatResult($options, $selectedOptions, $multiple);
+    $result = $this->extractResult($options, $selectedPositions, $multiple);
 
-    $this->moveCursorUp(1);
+    if (empty($result) && $require) {
+      $error = 'Select some option.';
+      goto startLoop;
+    }
+
+
+    // Clear hint and possibly error message
+    $this->moveCursorUp(1 + (int)isset($error));
     $this->clearDown();
 
     return $result;
@@ -140,22 +151,24 @@ class Selection
 
   /**
    * @param array<array-key, string> $options
-   * @param array<array-key> $selectedOptions
+   * @param list<int> $selectedPositions
    */
-  private function render(
+  private function createOutput(
     string $prompt,
     array $options,
-    int $selectedIndex,
-    array $selectedOptions,
+    int $position,
+    array $selectedPositions,
     bool $multiple,
+    ?string $error,
   ): string {
     $output = $prompt . PHP_EOL;
-    $indexes = array_keys($options);
-    $selectedIndexes = array_intersect_key($indexes, array_flip($selectedOptions));
 
-    foreach ($options as $index => $option) {
-      $isSelected = in_array($index, $selectedIndexes, strict: true);
-      $isCursor = ($index === ($indexes[$selectedIndex]));
+    // Because options can be associate array, we need own numeric index
+    $index = 0;
+
+    foreach ($options as $option) {
+      $isSelected = in_array($index, $selectedPositions, strict: true);
+      $isCursor = $index++ === $position;
 
       $prefix = $isCursor
         ? ' » '
@@ -172,45 +185,48 @@ class Selection
       ? 'Use the up/down arrow keys to navigate, space to select, and Enter to confirm.' . PHP_EOL
       : 'Use the up/down arrow keys to navigate and Enter to select.' . PHP_EOL;
 
+    $error && ($output .= $error . PHP_EOL);
+
     return $output;
   }
 
 
   /**
-   * @param array<array-key> &$selectedOptions
+   * @param array<array-key> &$selectedPositions
    * @return bool User confirmed the selection, exit the loop
    */
   private function processInput(
     string $input,
-    int &$selectedIndex,
-    array &$selectedOptions,
+    ?string &$error,
+    int &$position,
+    array &$selectedPositions,
     int $optionsCount,
     bool $multiple,
   ): bool {
     return match ($input) {
-      Key::ArrowUp => $this->handleArrowUp($selectedIndex, $optionsCount),
-      Key::ArrowDown => $this->handleArrowDown($selectedIndex, $optionsCount),
-      Key::Space => $this->handleSpace($selectedIndex, $selectedOptions, $multiple),
-      Key::Enter1, Key::Enter2 => $this->handleEnter($selectedIndex, $selectedOptions, $multiple),
+      Key::ArrowUp => $this->handleArrowUp($position, $optionsCount),
+      Key::ArrowDown => $this->handleArrowDown($position, $optionsCount),
+      Key::Space => $this->handleSpace($position, $error, $selectedPositions, $multiple),
+      Key::Enter1, Key::Enter2 => $this->handleEnter($position, $selectedPositions, $multiple),
       default => false,
     };
   }
 
 
-  private function handleArrowUp(int &$selectedIndex, int $optionsCount): bool
+  private function handleArrowUp(int &$position, int $optionsCount): bool
   {
-    $selectedIndex = ($selectedIndex > 0)
-      ? $selectedIndex - 1
+    $position = ($position > 0)
+      ? $position - 1
       : $optionsCount - 1;
 
     return false;
   }
 
 
-  private function handleArrowDown(int &$selectedIndex, int $optionsCount): bool
+  private function handleArrowDown(int &$position, int $optionsCount): bool
   {
-    $selectedIndex = ($selectedIndex < $optionsCount - 1)
-      ? $selectedIndex + 1
+    $position = ($position < $optionsCount - 1)
+      ? $position + 1
       : 0;
 
     return false;
@@ -218,30 +234,33 @@ class Selection
 
 
   /**
-   * @param array<array-key> &$selectedOptions
+   * @param list<int> &$selectedPositions
    */
-  private function handleSpace(int $selectedIndex, array &$selectedOptions, bool $multiple): bool
+  private function handleSpace(int $position, ?string &$error, array &$selectedPositions, bool $multiple): bool
   {
     if (!$multiple) {
       return false;
     }
 
     // Toggle the selection of the item
-    in_array($selectedIndex, $selectedOptions)
-      ? $selectedOptions = array_diff($selectedOptions, [$selectedIndex])
-      : $selectedOptions[] = $selectedIndex;
+    in_array($position, $selectedPositions)
+      ? $selectedPositions = array_values(array_diff($selectedPositions, [$position]))
+      : $selectedPositions[] = $position;
+
+    // We can clear the error
+    $error = null;
 
     return false;
   }
 
 
   /**
-   * @param array<array-key> &$selectedOptions
+   * @param list<int> &$selectedPositions
    */
-  private function handleEnter(int $selectedIndex, array &$selectedOptions, bool $multiple): bool
+  private function handleEnter(int $position, array &$selectedPositions, bool $multiple): bool
   {
     // For single selection always select the current item
-    !$multiple && $selectedOptions = [$selectedIndex];
+    !$multiple && $selectedPositions = [$position];
 
     return true;
   }
@@ -249,19 +268,20 @@ class Selection
 
   /**
    * @param list<string>|array<string, string> $options
-   * @param array<array-key> $selectedOptions
-   * @return string[]|string|null List returns value(s), map returns key(s)
+   * @param list<int> $selectedPositions
+   * @return string[]|string List returns value(s), map returns key(s)
    */
-  private function formatResult(array $options, array $selectedOptions, bool $multiple): array|string|null
+  private function extractResult(array $options, array $selectedPositions, bool $multiple): array|string
   {
-    $keys = array_is_list($options) ? $options : array_keys($options);
-    $result = [];
+    $values = array_is_list($options)
+      ? $options
+      : array_keys($options);
 
-    foreach ($selectedOptions as $index) {
-      $result[] = $keys[$index];
-    }
+    $result = array_intersect_key($values, array_flip($selectedPositions));
 
-    return !$multiple ? array_shift($result) : $result;
+    return $multiple
+      ? $result
+      : array_shift($result);
   }
 
 

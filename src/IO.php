@@ -52,7 +52,7 @@ class IO
    * @param list<string>|array<string, string> $options
    * @return string[]|string|null
    */
-  public function makeSelection(string $prompt, array $options, bool $multiple = false): array|string|null
+  public function makeSelection(string $prompt, array $options, bool $multiple = false, bool $require = true): array|string|null
   {
     return (new Selection($this->writer))->make($prompt, $options, $multiple);
   }

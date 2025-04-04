@@ -44,7 +44,7 @@ $frameworks = $io->makeSelection(
   options: ['Angular', 'React', 'Svelte', 'Vue'],
   multiple: true,
 );
-$io->writeLn('WOW! I 💙 ', implode(' and ', $frameworks) ?: 'nothing', ' too!');
+$io->writeLn('WOW! I 💙 ', implode(' and ', $frameworks), ' too!');
 
 $io->writeLn("Move along, nothing more to see here 👮‍");
 $io->exitSuccess();
