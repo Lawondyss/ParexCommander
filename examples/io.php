@@ -1,5 +1,6 @@
 <?php
 
+use Lawondyss\ParexCommander\Console\Writer;
 use Lawondyss\ParexCommander\IO;
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -17,6 +18,23 @@ $io->writeLn($go ? 'Thanks 😊' : 'Err... 🫨');
 if (!$go) {
   $io->exitError(code: 128);
 }
+$io->monitoring(
+  label: "Wait a minute, I'm preparing questions.",
+  callback: static function (Writer $writer): void {
+    $phrases = ["I'm thinking...", "I'm writing...", "Where's my paper?", "Where's my pencil?", "I'd like some coffee."];
+    $last = -1;
+
+    for ($i = 0; $i < 10; $i++) {
+      do {
+        $index = random_int(0, 4);
+      } while ($index === $last);
+      $writer->writeLn($phrases[$index]);
+      $last = $index;
+      sleep(1);
+    }
+  },
+  lines: 2,
+);
 
 $name = $io->makeQuestion(
   prompt: 'What is your name?',
@@ -46,5 +64,5 @@ $frameworks = $io->makeSelection(
 );
 $io->writeLn('WOW! I 💙 ', implode(' and ', $frameworks), ' too!');
 
-$io->writeLn("Move along, nothing more to see here 👮‍");
+$io->writeLn("Thanks, we'll get back to you.");
 $io->exitSuccess();

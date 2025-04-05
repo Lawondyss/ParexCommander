@@ -3,6 +3,7 @@
 namespace Lawondyss\ParexCommander;
 
 use Lawondyss\ParexCommander\Console\Confirmation;
+use Lawondyss\ParexCommander\Console\Monitor;
 use Lawondyss\ParexCommander\Console\Question;
 use Lawondyss\ParexCommander\Console\Selection;
 use Lawondyss\ParexCommander\Console\Utils\Ansi;
@@ -58,6 +59,20 @@ class IO
   public function makeSelection(string $prompt, array $options, bool $multiple = false, bool $require = true): array|string|null
   {
     $result = (new Selection($this->writer))->make($prompt, $options, $multiple);
+    $this->writeLn();
+
+    return $result;
+  }
+
+
+  /**
+   * @param callable $callback fn(Writer): mixed
+   * @return mixed Value from callback
+   */
+  public function monitoring(string $label, callable $callback, int $lines = 5): mixed
+  {
+    $this->writeLn();
+    $result = (new Monitor($this->writer, $lines))->execute($label, $callback);
     $this->writeLn();
 
     return $result;
