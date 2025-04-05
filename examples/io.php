@@ -20,7 +20,7 @@ if (!$go) {
 
 $name = $io->makeQuestion(
   prompt: 'What is your name?',
-  validator: fn(string $input) => strlen($input) === 0 ? '⛔️ Name is required' : true,
+  validator: fn (string $input) => strlen($input) === 0 ? '⛔️ Name is required' : true,
 );
 $io->writeLn("Hi, $name 👋");
 

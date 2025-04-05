@@ -44,7 +44,10 @@ class IO
    */
   public function makeQuestion(string $prompt, string $default = '', ?callable $validator = null): string
   {
-    return (new Question($this->writer))->make($prompt, $default, $validator);
+    $result = (new Question($this->writer))->make($prompt, $default, $validator);
+    $this->writeLn();
+
+    return $result;
   }
 
 
@@ -54,7 +57,10 @@ class IO
    */
   public function makeSelection(string $prompt, array $options, bool $multiple = false, bool $require = true): array|string|null
   {
-    return (new Selection($this->writer))->make($prompt, $options, $multiple);
+    $result = (new Selection($this->writer))->make($prompt, $options, $multiple);
+    $this->writeLn();
+
+    return $result;
   }
 
 
@@ -64,7 +70,7 @@ class IO
   }
 
 
-  public function writeLn(string|Stringable $message, string|Stringable ...$others): void
+  public function writeLn(string|Stringable $message = '', string|Stringable ...$others): void
   {
     $this->writer->writeLn($message, ...$others);
   }
@@ -85,6 +91,7 @@ class IO
     }
 
     $this->writeLn(str_repeat('*', $outerLength));
+    $this->writeLn();
   }
 
 
