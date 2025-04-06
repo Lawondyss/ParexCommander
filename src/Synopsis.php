@@ -6,6 +6,7 @@ use function implode;
 use function is_int;
 use function str_pad;
 use function str_repeat;
+use function strtoupper;
 use function ucfirst;
 
 use const PHP_EOL;
@@ -95,7 +96,7 @@ readonly class Synopsis
   protected function synapse(): string
   {
     return match (true) {
-      $this->isPositional() => $this->name,
+      $this->isPositional() => strtoupper($this->name),
       $this->isFlag() => "--{$this->name}" . ($this->short ? "/-{$this->short}" : ''),
       default => "--{$this->name}" . ($this->short ? "(-{$this->short})" : ''),
     };

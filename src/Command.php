@@ -135,14 +135,26 @@ class Command
     $usage = ["Usage: {$this->name}"];
     $descriptions = [];
 
-    /** @var Synopsis $synopsis */
-    foreach ([...$arguments, ...$requires, ...$optionals, ...$flags] as $synopsis) {
+    $arguments !== [] && $descriptions[] = 'Arguments:';
+
+    foreach ($arguments as $synopsis) {
+      $usage[] = $synopsis->presentation();
+      $descriptions[] = $synopsis->description();
+    }
+
+    $arguments !== [] && $descriptions[] = '';
+
+    /** @var Synopsis[] $options */
+    $options = [...$requires, ...$optionals, ...$flags];
+    $options !== [] && $descriptions[] = 'Options:';
+
+    foreach ($options as $synopsis) {
       $usage[] = $synopsis->presentation();
       $descriptions[] = $synopsis->description();
     }
 
     return implode(PHP_EOL, [
-      $this->name . (isset($this->version) ? " v{$this->version}" : ''),
+      'Command ' . $this->name . (isset($this->version) ? " v{$this->version}" : ''),
       $this->description,
       '',
       implode(' ', $usage),
