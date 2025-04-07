@@ -11,6 +11,9 @@ use Lawondyss\ParexCommander\Exception\MissingException;
 use Lawondyss\ParexCommander\Exception\ParexCommanderException;
 
 use function implode;
+use function lcfirst;
+use function str_replace;
+use function ucwords;
 
 use const PHP_EOL;
 
@@ -97,7 +100,7 @@ class Command
       $casted = [];
 
       foreach ($this->synopses as $synopsis) {
-        $name = $synopsis->name;
+        $name = $this->camelCase($synopsis->name);
         $value = $synopsis->isPositional()
           ? ($values->POSITIONAL[$synopsis->position] ?? null)
           : $values->{$name};
@@ -203,5 +206,11 @@ class Command
         throw new MissingException("Argument '{$synopsis->name}' is required.", $synopsis);
       }
     }
+  }
+
+
+  protected function camelCase(string $s): string
+  {
+    return lcfirst(str_replace(' ', '', ucwords(str_replace('-', ' ', $s))));
   }
 }

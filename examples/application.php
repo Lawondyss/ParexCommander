@@ -20,13 +20,14 @@ $commander->addCommand('create', create(...), 'Create new migration file.')
           ->addPositional(Type::string(), 'name', 'Name for migration.')
           ->addOptional(Type::file(false), 'template', help: 'File with template of migration.', default: './migration.tpl');
 
+$commander->addCommand('init', new Init(), 'Initialization of Migration DB.');
 $commander->run();
 
 
 function migrate(DynamicResult $result, IO $io): void
 {
   $io->writeLn('Running some migrations.');
-  $result->{'dry-run'} && $io->writeLn('Launch simulation only.');
+  $result->dryRun && $io->writeLn('Launch simulation only.');
 
   sleep(2);
 
@@ -47,4 +48,14 @@ function create(DynamicResult $result, IO $io): void
   $dir = $io->makeSelection('Found multiple directories with migrations, select one.', ['dir1', 'dir2', 'dir3']);
   $io->writeLn("Migration {$result->name} will be created in {$dir}.");
   $io->exitSuccess();
+}
+
+class Init
+{
+  public function __invoke(DynamicResult $result, IO $io): void
+  {
+    $configType = $io->makeSelection('Select type of config file.', ['php', 'json', 'neon']);
+    $create = $io->makeConfirmation("Do you really want create a config.{$configType} file?");
+    $io->writeLn($create ? 'File created.' : 'Bye bye.');
+  }
 }

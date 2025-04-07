@@ -29,7 +29,7 @@ class ParexCommander
 
   public function addCommand(string $name, callable $handler, string $description = '', ?string $version = null): Command
   {
-    return $this->commands[$name] = new Command($name, $handler, $description, $version);
+    return $this->commands[$name] = new Command($name, $handler(...), $description, $version);
   }
 
 
