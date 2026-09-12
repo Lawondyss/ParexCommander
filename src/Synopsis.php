@@ -11,8 +11,14 @@ use function ucfirst;
 
 use const PHP_EOL;
 
+/**
+ * @template T
+ */
 readonly class Synopsis
 {
+  /**
+   * @param Type<T> $type
+   */
   public function __construct(
     public Type $type,
     public string $name,
@@ -46,7 +52,8 @@ readonly class Synopsis
     $desc[] = str_pad("  {$this->synapse()}", length: $leftSideWidth) . $this->help;
 
     if (isset($this->default)) {
-      $desc[] = "{$indent}Default value: {$this->default}";
+      $defaultStr = is_scalar($this->default) ? (string) $this->default : gettype($this->default);
+      $desc[] = "{$indent}Default value: {$defaultStr}";
     }
 
     if ($this->multiple) {

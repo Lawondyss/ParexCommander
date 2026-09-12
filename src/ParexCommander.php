@@ -11,7 +11,7 @@ use function str_pad;
 
 class ParexCommander
 {
-  /** @var array<string, Synopsis> $synopses */
+  /** @var array<string, Synopsis<mixed>> $synopses */
   protected array $synopses = [];
 
   /** @var array<string, Command> $commands */
@@ -33,6 +33,10 @@ class ParexCommander
   }
 
 
+  /**
+   * @template T
+   * @param Type<T> $type
+   */
   public function addOptional(
     Type $type,
     string $name,
@@ -58,9 +62,13 @@ class ParexCommander
     // First is always the script name.
     // The ArgvParser also uses array_shift($_SERVER['argv']) to remove the script name.
     // But instead it removes $commandName, and thus it will not be in DynamicResult::$POSITIONAL[0].
-    array_shift($_SERVER['argv']);
-
-    $commandName = $_SERVER['argv'][0] ?? null;
+    if (isset($_SERVER['argv']) && is_array($_SERVER['argv'])) {
+      array_shift($_SERVER['argv']);
+      $commandNameRaw = $_SERVER['argv'][0] ?? null;
+      $commandName = is_string($commandNameRaw) ? $commandNameRaw : null;
+    } else {
+      $commandName = null;
+    }
 
     if ($commandName === null) {
       $this->showHelp();
@@ -119,6 +127,10 @@ class ParexCommander
   }
 
 
+  /**
+   * @template T
+   * @param Synopsis<T> $synopsis
+   */
   protected function addSynopsis(Synopsis $synopsis): static
   {
     $name = $synopsis->name;

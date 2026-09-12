@@ -92,9 +92,13 @@ final class Color
   }
 
 
+  /**
+   * @param array<int, mixed> $arguments
+   */
   public static function __callStatic(string $colorName, array $arguments): string
   {
-    $s = array_shift($arguments) ?? '';
+    $arg = array_shift($arguments);
+    $s = is_scalar($arg) ? (string)$arg : '';
 
     if (str_ends_with($colorName, 'Bg')) {
       // Trim reset from the end of the string to preserve the background color
@@ -106,6 +110,6 @@ final class Color
       $s = " {$s} ";
     }
 
-    return self::Colors[$colorName] . $s . self::Reset;
+    return (self::Colors[$colorName] ?? '') . $s . self::Reset;
   }
 }

@@ -95,7 +95,7 @@ class Selection
 
     $result = $this->extractResult($options, $selectedPositions, $multiple);
 
-    if (empty($result) && $require) {
+    if (($result === [] || $result === '') && $require) {
       $error = 'Select some option.';
       goto startLoop;
     }
@@ -150,7 +150,7 @@ class Selection
 
 
   /**
-   * @param array<array-key, string> $options
+   * @param list<string>|array<string, string> $options
    * @param list<int> $selectedPositions
    */
   private function createOutput(
@@ -192,7 +192,7 @@ class Selection
 
 
   /**
-   * @param array<array-key> &$selectedPositions
+   * @param list<int> &$selectedPositions
    * @return bool User confirmed the selection, exit the loop
    */
   private function processInput(
@@ -273,15 +273,23 @@ class Selection
    */
   private function extractResult(array $options, array $selectedPositions, bool $multiple): array|string
   {
+    /** @var list<string> $values */
     $values = array_is_list($options)
       ? $options
       : array_keys($options);
 
-    $result = array_intersect_key($values, array_flip($selectedPositions));
+    $resultMap = array_intersect_key($values, array_flip($selectedPositions));
 
-    return $multiple
-      ? $result
-      : array_shift($result);
+    /** @var list<string> $resultList */
+    $resultList = array_values($resultMap);
+
+    if ($multiple) {
+      return $resultList;
+    }
+
+    $first = array_shift($resultList);
+
+    return $first ?? '';
   }
 
 

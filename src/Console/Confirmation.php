@@ -46,7 +46,8 @@ class Confirmation
 
     while (true) {
       $this->writer->write("{$prompt} {$options} ");
-      $answer = trim(fgets(STDIN));
+      $input = fgets(STDIN);
+      $answer = trim($input !== false ? $input : '');
 
       if ($answer === '') {
         return $default;

@@ -54,177 +54,201 @@ readonly class Type
 
 
   /**
-   * @return static<bool>
+   * @return self<bool>
    */
-  final public static function flag(): static
+  final public static function flag(): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::FlagName,
+    /** @var self<bool> $instance */
+    $instance = new self(
+      name: self::FlagName,
       validator: static fn ($val) => Assert::boolean($val, 'Value for flag must be a boolean.'),
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<string>
+   * @return self<string>
    */
-  public static function string(?Closure $validator = null): static
+  public static function string(?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::StringName,
+    /** @var self<string> $instance */
+    $instance = new self(
+      name: self::StringName,
       validator: $validator,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<int>
+   * @return self<int>
    */
-  public static function integer(?Closure $validator = null): static
+  public static function integer(?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::IntegerName,
+    /** @var self<int> $instance */
+    $instance = new self(
+      name: self::IntegerName,
       caster: static fn (string $val) => (int)round((float)$val),
       validator: $validator ?? Assert::integer(...),
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<int|float>
+   * @return self<int|float>
    */
-  public static function number(?Closure $validator = null): static
+  public static function number(?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::NumberName,
-      caster: static fn (string $val) => (1 * $val), // @phpstan-ignore binaryOp.invalid
+    /** @var self<int|float> $instance */
+    $instance = new self(
+      name: self::NumberName,
+      caster: static fn (string $val) => (is_numeric($val) ? $val + 0 : 0),
       validator: $validator ?? Assert::number(...),
     );
+
+    return $instance;
   }
 
 
   /**
    * @param list<string> $values
-   * @return static<string>
+   * @return self<string>
    */
-  public static function enum(array $values, ?Closure $validator = null): static
+  public static function enum(array $values, ?Closure $validator = null): self
   {
     $values = array_map(static fn ($val) => (string)$val, $values);
 
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::EnumName,
+    /** @var self<string> $instance */
+    $instance = new self(
+      name: self::EnumName,
       validator: $validator ?? static fn (string $val) => Assert::contains($val, $values),
       values: $values,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<DateTimeImmutable>
+   * @return self<DateTimeImmutable>
    */
-  public static function date(string $format = 'Y-m-d', ?DateTimeZone $timeZone = null, ?Closure $validator = null): static
+  public static function date(string $format = 'Y-m-d', ?DateTimeZone $timeZone = null, ?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::DateName,
+    /** @var self<DateTimeImmutable> $instance */
+    $instance = new self(
+      name: self::DateName,
       caster: static fn (string $val) => DateTimeImmutable::createFromFormat($format, $val, $timeZone),
       validator: $validator ?? static fn (string $val) => Assert::dateFormat($val, $format),
       dateTimeFormat: $format,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<DateTimeImmutable>
+   * @return self<DateTimeImmutable>
    */
-  public static function dateTime(string $format = 'Y-m-d H:i', ?DateTimeZone $timeZone = null, ?Closure $validator = null): static
+  public static function dateTime(string $format = 'Y-m-d H:i', ?DateTimeZone $timeZone = null, ?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::DateTimeName,
+    /** @var self<DateTimeImmutable> $instance */
+    $instance = new self(
+      name: self::DateTimeName,
       caster: static fn (string $val) => DateTimeImmutable::createFromFormat($format, $val, $timeZone),
       validator: $validator ?? static fn (string $val) => Assert::dateFormat($val, $format),
       dateTimeFormat: $format,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<SplFileInfo>
+   * @return self<SplFileInfo>
    */
-  public static function file(bool $mustExists = true, ?Closure $validator = null): static
+  public static function file(bool $mustExists = true, ?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::FileName,
+    /** @var self<SplFileInfo> $instance */
+    $instance = new self(
+      name: self::FileName,
       caster: static fn (string $val) => new SplFileInfo($val),
       validator: $validator ?? static fn (string $val) => ($mustExists && !file_exists($val))
       ? "File '$val' must exist."
       : true,
       mustExists: $mustExists,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<SplFileInfo>
+   * @return self<SplFileInfo>
    */
-  public static function directory(bool $mustExists = true, ?Closure $validator = null): static
+  public static function directory(bool $mustExists = true, ?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::DirectoryName,
+    /** @var self<SplFileInfo> $instance */
+    $instance = new self(
+      name: self::DirectoryName,
       caster: static fn (string $val) => new SplFileInfo($val),
       validator: $validator ?? static fn (string $val) => ($mustExists && !is_dir($val))
       ? "Directory '$val' must exist."
       : true,
       mustExists: $mustExists,
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<string>
+   * @return self<string>
    */
-  public static function email(?Closure $validator = null): static
+  public static function email(?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::EmailName,
+    /** @var self<string> $instance */
+    $instance = new self(
+      name: self::EmailName,
       validator: $validator ?? Assert::email(...),
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<string>
+   * @return self<string>
    */
-  public static function url(?Closure $validator = null): static
+  public static function url(?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::UrlName,
+    /** @var self<string> $instance */
+    $instance = new self(
+      name: self::UrlName,
       validator: $validator ?? Assert::url(...),
     );
+
+    return $instance;
   }
 
 
   /**
-   * @return static<string>
+   * @return self<string>
    */
-  public static function regex(string $regex, ?Closure $validator = null): static
+  public static function regex(string $regex, ?Closure $validator = null): self
   {
-    // @phpstan-ignore new.static
-    return new static(
-      name: static::RegexName,
+    /** @var self<string> $instance */
+    $instance = new self(
+      name: self::RegexName,
       validator: $validator ?? static fn (string $val) => Assert::regexMatch($val, $regex),
       regex: $regex,
     );
+
+    return $instance;
   }
 
 
@@ -244,10 +268,11 @@ readonly class Type
       ($validationResult === true) || throw new InvalidValueException(
         message: is_string($validationResult)
           ? $validationResult
-          : "Value '$input' is not valid for type '{$this->name}'.",
+          : "Value '" . (is_scalar($input) ? (string) $input : gettype($input)) . "' is not valid for type '{$this->name}'.",
       );
     }
 
+    /** @var T|null */
     return isset($this->caster)
       ? ($this->caster)($input)
       : $input;

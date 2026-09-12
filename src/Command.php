@@ -19,7 +19,7 @@ use const PHP_EOL;
 
 class Command
 {
-  /** @var array<string, Synopsis> $synopses */
+  /** @var array<string, Synopsis<mixed>> $synopses */
   protected array $synopses = [];
 
   protected int $lastPosition = 0;
@@ -41,6 +41,10 @@ class Command
   }
 
 
+  /**
+   * @template T
+   * @param Type<T> $type
+   */
   public function addPositional(Type $type, string $name, string $help = '', bool $required = true): static
   {
     return $this->addSynopsis(new Synopsis(
@@ -54,6 +58,10 @@ class Command
   }
 
 
+  /**
+   * @template T
+   * @param Type<T> $type
+   */
   public function addRequired(
     Type $type,
     string $name,
@@ -65,6 +73,10 @@ class Command
   }
 
 
+  /**
+   * @template T
+   * @param Type<T> $type
+   */
   public function addOptional(
     Type $type,
     string $name,
@@ -97,6 +109,7 @@ class Command
       $this->checkPositional($values);
 
       // Cast data for pseudo-typed DynamicResult
+      /** @var array<string, mixed> $casted */
       $casted = [];
 
       foreach ($this->synopses as $synopsis) {
@@ -108,6 +121,7 @@ class Command
       }
 
       // The handler should call exit() itself
+      // @phpstan-ignore argument.type
       ($this->handler)(new DynamicResult(...$casted), $io);
       // But just in case
       $io->exitSuccess();
@@ -147,7 +161,7 @@ class Command
 
     $arguments !== [] && $descriptions[] = '';
 
-    /** @var Synopsis[] $options */
+    /** @var Synopsis<mixed>[] $options */
     $options = [...$requires, ...$optionals, ...$flags];
     $options !== [] && $descriptions[] = 'Options:';
 
@@ -167,6 +181,10 @@ class Command
   }
 
 
+  /**
+   * @template T
+   * @param Synopsis<T> $synopsis
+   */
   protected function addSynopsis(Synopsis $synopsis): static
   {
     $name = $synopsis->name;
