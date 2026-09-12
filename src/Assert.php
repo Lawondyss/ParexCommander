@@ -32,7 +32,7 @@ class Assert
       default => "'" . gettype($value) . "'",
     };
 
-    return str_replace('{$value}', $formattedValue, $error);
+    return str_replace(['{$value}', '{value}'], $formattedValue, $error);
   }
 
 
@@ -50,7 +50,7 @@ class Assert
 
   public static function integer(mixed $value, string $error = 'Value {value} must be an integer.'): true|string
   {
-    return self::assert($value, is_int(...), $error);
+    return self::assert($value, static fn (mixed $val) => is_int($val) || (is_numeric($val) && (string)(int)$val === (string)$val), $error);
   }
 
 
@@ -59,7 +59,7 @@ class Assert
     return self::assert(
       $value,
       static fn (mixed $val) => is_string($val) && DateTimeImmutable::createFromFormat($format, $val) !== false,
-      str_replace('{$format}', $format, $error),
+      str_replace(['{$format}', '{format}'], $format, $error),
     );
   }
 
@@ -72,7 +72,7 @@ class Assert
     return self::assert(
       $value,
       check: static fn ($val) => in_array($value, $values, strict: true),
-      error: str_replace('{$values}', implode(', ', $values), $error),
+      error: str_replace(['{$values}', '{values}'], implode(', ', $values), $error),
     );
   }
 
@@ -101,8 +101,8 @@ class Assert
   {
     return self::assert(
       $value,
-      check: static fn (string $val) => preg_match($regex, $val) === false,
-      error: str_replace('{$regex}', $regex, $error),
+      check: static fn (string $val) => preg_match($regex, $val) === 1,
+      error: str_replace(['{$regex}', '{regex}'], $regex, $error),
     );
   }
 }
