@@ -26,7 +26,8 @@ class Question
       $default && $displayPrompt .= " [{$default}]";
       $this->writer->write($displayPrompt, $default ? " [{$default}]" : '', ' ');
 
-      $text = trim(fgets(STDIN));
+      $input = fgets(STDIN);
+      $text = trim($input !== false ? $input : '');
       $text = $text !== '' ? $text : $default;
 
       if ($validator !== null) {

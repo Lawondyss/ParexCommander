@@ -7,6 +7,9 @@ use RuntimeException;
 
 class MissingException extends RuntimeException implements ParexCommanderException
 {
+  /**
+   * @param Synopsis<mixed> $synopsis
+   */
   public function __construct(
     string $message,
     public readonly Synopsis $synopsis,

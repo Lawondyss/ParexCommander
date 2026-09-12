@@ -25,13 +25,14 @@ class Assert
       return true;
     }
 
-    $value = match (true) {
+    $formattedValue = match (true) {
       is_bool($value) => $value ? 'TRUE' : 'FALSE',
-      is_numeric($value) => $value,
-      default => "'{$value}'",
+      is_numeric($value) => (string) $value,
+      is_string($value) => "'{$value}'",
+      default => "'" . gettype($value) . "'",
     };
 
-    return str_replace('{$value}', $value, $error);
+    return str_replace('{$value}', $formattedValue, $error);
   }
 
 
@@ -57,14 +58,14 @@ class Assert
   {
     return self::assert(
       $value,
-      static fn (mixed $val) => DateTimeImmutable::createFromFormat($format, $val),
+      static fn (mixed $val) => is_string($val) && DateTimeImmutable::createFromFormat($format, $val) !== false,
       str_replace('{$format}', $format, $error),
     );
   }
 
 
   /**
-   * @param list<mixed> $values
+   * @param list<string> $values
    */
   public static function contains(mixed $value, array $values, string $error = 'Value {value} must be from: {values}'): true|string
   {
