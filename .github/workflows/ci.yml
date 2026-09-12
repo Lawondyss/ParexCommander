@@ -32,4 +32,4 @@ jobs:
         run: composer run phpstan
 
       - name: Check Code Style
-        run: composer run phpcs-fix fix --dry-run --allow-risky=yes
+        run: composer run phpcsfix fix --dry-run --allow-risky=yes
