@@ -27,7 +27,8 @@
   "require-dev": {
     "phpstan/phpstan": "^2.1",
     "friendsofphp/php-cs-fixer": "3.69",
-    "tracy/tracy": "^2.10"
+    "tracy/tracy": "^2.10",
+    "nette/tester": "^2.6"
   },
   "autoload": {
     "psr-4": {
@@ -36,6 +37,7 @@
   },
   "scripts": {
     "phpstan": "phpstan analyse -l max src/",
-    "phpcsfix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --allow-risky yes"
+    "phpcsfix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --allow-risky yes",
+    "tests": "tester tests"
   }
 }
