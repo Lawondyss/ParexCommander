@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, master ]
 
 jobs:
   tests:
@@ -32,4 +32,4 @@ jobs:
         run: composer run phpstan
 
       - name: Check Code Style
-        run: composer run phpcsfix fix --dry-run --allow-risky=yes
+        run: PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix --dry-run --allow-risky=yes
